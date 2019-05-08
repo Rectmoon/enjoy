@@ -1,0 +1,48 @@
+*
+  box-sizing border-box
+  background-repeat no-repeat
+  -webkit-text-size-adjust 100%
+  -webkit-tap-highlight-color transparent
+  margin 0
+  padding 0
+
+html, body
+  width 100%
+  height 100%
+
+.page
+  width 100%
+  height 100%
+  position fixed
+  left 0
+  top 0
+  z-index 20
+  background-color orange
+
+ul, li, ol, dl, dd
+  list-style none
+
+h1, h2, h3, h4, p
+  font-weight normal
+
+.clearfix
+  &:after
+    content ''
+    display block
+    visibility hidden
+    width 0
+    height 0
+    zoom 1
+    clear both
+
+a
+  text-decoration none
+  color inherit
+
+img
+  max-width 100%
+
+.dxy-article-container
+  text-align left
+  max-width 1000px
+  margin 0 auto
