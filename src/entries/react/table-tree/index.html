@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Document</title>
+
+    <script src="/static/react.js"></script>
+    <script src="/static/react-dom.js"></script>
+    <script src="/static/browser.min.js"></script>
+    <script src="/static/jquery-3.3.1.min.js"></script>
+  </head>
+  <body>
+    <div id="app"></div>
+
+    <script type="text/babel">
+      function cleanData(data) {
+        let data2 = [...data]
+        let levelLength = 0
+        let clean = []
+        if (data2.length == 0) return []
+        data2 = data2.map(item => {
+          delete item.level
+          return item
+        })
+        function convert(orgin) {
+          var result = arguments[1] ? arguments[1] : []
+          var level = arguments[2] ? arguments[2] : 0
+          var parentid = arguments[3] ? arguments[3] : 0
+          for (var x in orgin) {
+            if (
+              orgin[x]['parentid'] == parentid &&
+              orgin[x]['skip_012ea834e2aa011ef16f7d846889c026'] != 1
+            ) {
+              orgin[x]['level'] = level
+              result.push(JSON.parse(JSON.stringify(orgin[x]))) //对象深拷贝
+              orgin[x]['skip_012ea834e2aa011ef16f7d846889c026'] = 1 //标记该节点不用再遍历
+              if (orgin[x]['isleaf'] != 1) {
+                convert(orgin, result, level + 1, orgin[x]['id'])
+              }
+            }
+          }
+          return result
+        }
+        data2 = convert(data2)
+
+        data2.forEach(item => {
+          if (item.level > levelLength) {
+            levelLength = item.level
+          }
+        })
+        data2 = data2.map(item => {
+          item.children = []
+          item.show = true
+          return item
+        })
+        for (let i = 0; i <= levelLength; i++) {
+          clean[i] = []
+          data2.forEach(item => {
+            if (item.level == i) {
+              clean[i].push(item)
+            }
+          })
+        }
+        for (let i = clean.length - 1; i >= 0; i--) {
+          for (let j = 0; j < clean[i].length; j++) {
+            addToChildren(clean[i][j], i)
+          }
+        }
+        return clean[0]
+        function addToChildren(obj, index) {
+          if (index != 0) {
+            let _i = index - 1
+            for (let i = 0; i < clean[_i].length; i++) {
+              if (clean[_i][i].id == obj.parentid) {
+                clean[_i][i]._icon_ = true //初始化全部展开
+                clean[_i][i].children.push(obj)
+              }
+            }
+          }
+        }
+      }
+
+      function combineData(cleanData) {
+        let clean = [...cleanData]
+        let res = []
+        for (let i = 0; i < clean.length; i++) {
+          res.push(clean[i])
+          expandToArray(clean[i])
+        }
+        return res
+        function expandToArray(whenClean) {
+          if (whenClean.children.length != 0) {
+            for (let j = 0; j < whenClean.children.length; j++) {
+              res.push(whenClean.children[j])
+              expandToArray(whenClean.children[j])
+            }
+          }
+        }
+      }
+
+      var TableTree = React.createClass({
+        getInitialState: function() {
+          return {
+            minWidth: 50,
+            deleteBtnDisable: false,
+            refreshBtnDisable: false,
+            data: [],
+            loading: {},
+            column: [...this.props.columns]
+          }
+        },
+        getDefaultProps: function() {
+          return {
+            treeLoading: false,
+            needUpdate: '',
+            showDeleteBtn: false,
+            columns: [{}],
+            rowdata: []
+          }
+        },
+
+        init: function(rowdata) {
+          var arr = combineData(cleanData([...rowdata]))
+          this.setState({ data: arr })
+          console.log(arr)
+          if (!arr.length) return
+          let data_format = JSON.parse(JSON.stringify(arr[0]))
+          console.log(111)
+          initValue(data_format, '')
+          function initValue(obj, init = '') {
+            for (let [key, value] of Object.entries(obj)) {
+              if (value == null) {
+                obj[key] = init
+              } else {
+                if (typeof value != 'object') {
+                  obj[key] = init
+                } else {
+                  if (value instanceof Array) {
+                    if (key != 'funcList') {
+                      for (let i = 0; i < value.length; i++) {
+                        initValue(value, init)
+                      }
+                    } else {
+                      let vvv = [...value]
+                      for (let i = 0; i < vvv.length; i++) {
+                        vvv[i] = Object.assign(vvv[i])
+                        vvv[i].checked = false
+                      }
+                      obj[key] = vvv
+                    }
+                  } else {
+                    initValue(value, init)
+                  }
+                }
+              }
+            }
+          }
+          this.data_format = data_format
+          this.initValue()
+        },
+
+        initValue: function() {
+          let row = [...this.state.data]
+          let col = [...this.state.column]
+          for (let i = 0; i < row.length; i++) {
+            this.$set(this.checkboxControl, 'active' + row[i].id, false)
+            for (let j = 0; j < col.length; j++) {
+              if (col[j].edit == true || col[j].select == true) {
+                // 初始化单元格input
+                this.$set(
+                  this.lineValue,
+                  'lineValue' + col[j].prop + row[i].id,
+                  row[i][col[j].prop]
+                )
+              }
+            }
+          }
+        },
+
+        componentWillReceiveProps: function(nextProps) {
+          if (
+            nextProps.needUpdate != this.props.needUpdate &&
+            nextProps.rowdata.length
+          ) {
+            this.setState({ column: nextProps.columns })
+            this.init(nextProps.rowdata)
+          }
+        },
+
+        render: function() {
+          var columns = this.props.columns
+          var arr = this.state.data.filter(v => v.show)
+          return (
+            <div className="tree-wrap">
+              <div className="tree">
+                <ul class="table-header">
+                  {columns.map((col, i) => {
+                    return (
+                      <li
+                        key={i}
+                        className="nowrap"
+                        style={{
+                          width: col.width
+                            ? col.width + 'px'
+                            : this.state.minWidth + 'px',
+                          flex: col.width
+                            ? 'none'
+                            : col.delete == true || col.operate == true
+                            ? 'none'
+                            : 1,
+                          overflow: col.operate == true ? 'visible' : '',
+                          padding: '0px 10px'
+                        }}
+                      >
+                        {col.operate ? (
+                          <i
+                            style={{ transform: 'translateX(-12px)' }}
+                            className="fa fa-cogs"
+                            aria-hidden="true"
+                          />
+                        ) : null}
+
+                        {col.delete ? (
+                          <span
+                            style={{ transform: 'translateX(-12px)' }}
+                            className="fa fa-cogs"
+                            aria-hidden="true"
+                          >
+                            <button
+                              style={{
+                                display: this.props.showDeleteBtn ? '' : 'none'
+                              }}
+                              id="tree_grid___id"
+                              title="删除所选项"
+                              className="btn-delete"
+                              disabled={this.state.deleteBtnDisable}
+                            >
+                              {this.state.deleteBtnDisable ? (
+                                <i
+                                  className="fa fa-spin fa-spinner"
+                                  aria-hidden="true"
+                                />
+                              ) : (
+                                <i className="fa fa-trash" aria-hidden="true" />
+                              )}
+                            </button>
+                          </span>
+                        ) : null}
+                      </li>
+                    )
+                  })}
+                </ul>
+
+                {columns.length ? (
+                  <ul className="table-body">
+                    {arr.map((d, i) => {
+                      return (
+                        <div className="table-body-li-wrap" key={d.id}>
+                          {this.state.loading[d.id] ? (
+                            <div className="uploading">
+                              <i
+                                className="fa fa-spin fa-spinner"
+                                aria-hidden="true"
+                              />
+                            </div>
+                          ) : null}
+
+                          <div className="flex">
+                            {columns.map((col, i) => {
+                              return (
+                                <li
+                                  className="table-body-li nowrap"
+                                  key={i}
+                                  style={{
+                                    width: col.width
+                                      ? col.width + 'px'
+                                      : this.state.minWidth + 'px',
+                                    flex: col.width
+                                      ? 'none'
+                                      : col.delete == true ||
+                                        col.operate == true
+                                      ? 'none'
+                                      : 1,
+                                    padding: '0px 10px',
+                                    paddingLeft: col.isTree
+                                      ? 10 + d.level * 30 + 'px'
+                                      : '10px',
+                                    overflow:
+                                      col.operate == true ? 'visible' : ''
+                                  }}
+                                >
+                                  {col.isTree ? (
+                                    <div>
+                                      {d.level != '0' ? (
+                                        <span>
+                                          {new Array(d.level).map(
+                                            (line, indexLine) => {
+                                              return (
+                                                <i
+                                                  key={indexLine}
+                                                  style={{
+                                                    left:
+                                                      (line - 1) * 30 +
+                                                      16 +
+                                                      'px'
+                                                  }}
+                                                  className="v-line-full"
+                                                />
+                                              )
+                                            }
+                                          )}
+                                        </span>
+                                      ) : null}
+
+                                      {d._icon_ == true ? (
+                                        <i
+                                          style={{
+                                            left: d.level * 30 + 16 + 'px'
+                                          }}
+                                          className="v-line-bottom"
+                                        />
+                                      ) : null}
+
+                                      {d.level != '0' ? (
+                                        <i
+                                          style={{
+                                            left: (d.level - 1) * 30 + 16 + 'px'
+                                          }}
+                                          className="v-line-h"
+                                        />
+                                      ) : null}
+                                    </div>
+                                  ) : null}
+
+                                  {col.isTree && d.children.length != 0 ? (
+                                    <div>
+                                      {d._icon_ ? (
+                                        <span>
+                                          <i
+                                            className="fa fa-minus-square"
+                                            aria-hidden="true"
+                                          />
+                                        </span>
+                                      ) : (
+                                        <span>
+                                          <i
+                                            className="fa fa-plus-square"
+                                            aria-hidden="true"
+                                          />
+                                        </span>
+                                      )}
+                                    </div>
+                                  ) : null}
+
+                                  {col.isTree && d.children.length == 0 ? (
+                                    <div>
+                                      <span>
+                                        {d.isleaf == 0 ? (
+                                          <i
+                                            className="fa fa-plus-square"
+                                            aria-hidden="true"
+                                          />
+                                        ) : (
+                                          <i
+                                            className="fa fa-file-text-o"
+                                            aria-hidden="true"
+                                          />
+                                        )}
+                                      </span>
+                                    </div>
+                                  ) : null}
+
+                                  {col.select ? (
+                                    <div>
+                                      <span
+                                        style={{ textAlign: 'left' }}
+                                        className="no-wrap"
+                                      >
+                                        {d[col.prop]}
+                                      </span>
+                                      <select
+                                        style={{
+                                          width: col.isTree ? 'auto' : '100%'
+                                        }}
+                                      >
+                                        {col.optionList.map((opt, index) => {
+                                          return (
+                                            <option
+                                              value={opt}
+                                              key={opt + index}
+                                            >
+                                              {opt}
+                                            </option>
+                                          )
+                                        })}
+                                      </select>
+                                    </div>
+                                  ) : null}
+                                </li>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </ul>
+                ) : (
+                  <div className="no-data">
+                    <i className="fa fa-file-o" aria-hidden="true" />
+                    &nbsp;&nbsp;数据为空
+                  </div>
+                )}
+              </div>
+
+              {this.props.treeLoading && this.state.data.length ? (
+                <div className="tree-loading">
+                  <i className="fa fa-spinner fa-spin" aria-hidden="true" />
+                </div>
+              ) : null}
+            </div>
+          )
+        }
+      })
+
+      var MyComponent = React.createClass({
+        getInitialState: function() {
+          return {
+            treeLoading: false,
+            data: [],
+            needUpdate: Date.now(),
+            columns: [
+              { name: 'ID', prop: 'id', width: 50 },
+              {
+                name: 'name字段',
+                prop: 'name',
+                width: 260,
+                isTree: true,
+                edit: true,
+                delete: true
+              },
+              { name: '操作', operate: true, width: 50 },
+              { name: 'url', prop: 'url', edit: true, width: 50 },
+              {
+                name: '下拉的',
+                width: 50,
+                prop: 'selectItem',
+                select: true,
+                optionList: [1, 2, 3, 4]
+              },
+              { name: '功能选择', prop: 'funcList', funcList: true, width: 50 }
+            ]
+          }
+        },
+        handleClick: function() {
+          this.refs.myTextInput.focus()
+        },
+
+        getData: function() {
+          $.get('/static/menu.json', data => {
+            setTimeout(() => {
+              this.setState({
+                treeLoading: false,
+                data: data,
+                needUpdate: Date.now()
+              })
+            }, 1500)
+          })
+        },
+
+        componentDidMount: function() {
+          this.treeLoading = true
+          this.getData()
+        },
+
+        render: function() {
+          return (
+            <div>
+              <input type="text" ref="myTextInput" />
+              <input
+                type="button"
+                value="Focus the text input1"
+                onClick={this.handleClick}
+              />
+              <TableTree
+                columns={this.state.columns}
+                rowdata={this.state.data}
+                treeLoading={this.state.treeLoading}
+                needUpdate={this.state.needUpdate}
+              />
+            </div>
+          )
+        }
+      })
+
+      ReactDOM.render(<MyComponent />, document.getElementById('app'))
+    </script>
+  </body>
+</html>
