@@ -29,10 +29,7 @@
           var level = arguments[2] ? arguments[2] : 0
           var parentid = arguments[3] ? arguments[3] : 0
           for (var x in orgin) {
-            if (
-              orgin[x]['parentid'] == parentid &&
-              orgin[x]['skip_012ea834e2aa011ef16f7d846889c026'] != 1
-            ) {
+            if (orgin[x]['parentid'] == parentid && orgin[x]['skip_012ea834e2aa011ef16f7d846889c026'] != 1) {
               orgin[x]['level'] = level
               result.push(JSON.parse(JSON.stringify(orgin[x]))) //对象深拷贝
               orgin[x]['skip_012ea834e2aa011ef16f7d846889c026'] = 1 //标记该节点不用再遍历
@@ -55,6 +52,7 @@
           item.show = true
           return item
         })
+
         for (let i = 0; i <= levelLength; i++) {
           clean[i] = []
           data2.forEach(item => {
@@ -108,7 +106,16 @@
             refreshBtnDisable: false,
             data: [],
             loading: {},
-            column: [...this.props.columns]
+            column: [...this.props.columns],
+            data_format: null,
+            // 复选框控制
+            checkboxControl: {},
+            // 控制输入框的值
+            lineValue: {},
+            // 每行的编辑状态
+            operateStatus: {},
+            // 待删除id集合
+            deleteIdArr: []
           }
         },
         getDefaultProps: function() {
@@ -122,12 +129,11 @@
         },
 
         init: function(rowdata) {
+          if (rowdata.length == 0) return
           var arr = combineData(cleanData([...rowdata]))
           this.setState({ data: arr })
-          console.log(arr)
           if (!arr.length) return
           let data_format = JSON.parse(JSON.stringify(arr[0]))
-          console.log(111)
           initValue(data_format, '')
           function initValue(obj, init = '') {
             for (let [key, value] of Object.entries(obj)) {
@@ -157,77 +163,389 @@
               }
             }
           }
-          this.data_format = data_format
-          this.initValue()
+          this.setState(
+            {
+              data_format: data_format
+            },
+            () => {
+              this.initValue()
+            }
+          )
         },
 
         initValue: function() {
           let row = [...this.state.data]
           let col = [...this.state.column]
+          var { checkboxControl, lineValue } = this.state
           for (let i = 0; i < row.length; i++) {
-            this.$set(this.checkboxControl, 'active' + row[i].id, false)
+            checkboxControl[['active' + row[i].id]] = false
+
             for (let j = 0; j < col.length; j++) {
               if (col[j].edit == true || col[j].select == true) {
-                // 初始化单元格input
-                this.$set(
-                  this.lineValue,
-                  'lineValue' + col[j].prop + row[i].id,
-                  row[i][col[j].prop]
-                )
+                lineValue[['lineValue' + col[j].prop + row[i].id]] = row[i][col[j].prop] || ''
               }
             }
           }
+          this.setState({
+            checkboxControl,
+            lineValue
+          })
+        },
+
+        //btn-编辑
+        operateBtn(rowItemId) {
+          let d = [...this.state.data]
+          let col = [...this.state.column]
+          for (let i = 0; i < d.length; i++) {
+            if (d[i].id == rowItemId) {
+              d[i].openEdit = true
+              break
+            }
+          }
+          this.setState({
+            operateStatus: {
+              ...this.state.operateStatus,
+              ['status' + rowItemId]: true
+            }
+          })
         },
 
         componentWillReceiveProps: function(nextProps) {
-          if (
-            nextProps.needUpdate != this.props.needUpdate &&
-            nextProps.rowdata.length
-          ) {
+          if (nextProps.needUpdate != this.props.needUpdate && nextProps.rowdata.length) {
             this.setState({ column: nextProps.columns })
             this.init(nextProps.rowdata)
+          }
+        },
+
+        //相关行的折叠与展开
+        handleExpand: function(rowItem, bool) {
+          let d = [...this.state.data]
+          let lastLine = null
+          for (let i = 0; i < d.length; i++) {
+            if (d[i].id == rowItem.id) {
+              d[i]._icon_ = bool
+              let temp_level = Number.MAX_SAFE_INTEGER
+              let k = i
+              let clickLevel = d[i].level
+              while (123456) {
+                k++
+                lastLine = k
+                if (d[k] == undefined) break
+                if (bool == false) {
+                  if (d[k].level > clickLevel) {
+                    d[k].show = false
+                  } else {
+                    break
+                  }
+                } else {
+                  if (d[k].level > clickLevel) {
+                    if (d[k].level > temp_level) {
+                      continue
+                    } else if (d[k].level == temp_level) {
+                      temp_level = Number.MAX_SAFE_INTEGER
+                    }
+                    if (d[k]._icon_ == false) {
+                      temp_level = d[k].level
+                    }
+                    d[k].show = true
+                  } else {
+                    break
+                  }
+                }
+              }
+            }
+          }
+          this.setState({ data: d }, () => {
+            this.props.expand && this.props.expand(rowItem, [...d])
+          })
+          return [lastLine, d]
+        },
+
+        //复选框切换
+        checkbox_change: function(rowItemId) {
+          if (this.state.deleteBtnDisable) return
+          let old_bool = this.state.checkboxControl['active' + rowItemId],
+            now_bool = !old_bool
+          let o = {}
+          o['active' + rowItemId] = now_bool
+          if (now_bool) {
+            // 选中的规则
+            let d = [...this.state.data]
+            for (let i = 0; i < d.length; i++) {
+              if (d[i].id == rowItemId) {
+                let k = i
+                let clickLevel = d[i].level
+                while (666) {
+                  k++
+                  if (d[k] == undefined) break
+                  if (d[k].level > clickLevel) {
+                    o['active' + d[k].id] = true
+                  } else {
+                    break
+                  }
+                }
+                break
+              }
+            }
+          } else {
+            // 不选中的规则
+            let d = [...this.state.data]
+            for (let i = 0; i < d.length; i++) {
+              if (d[i].id == rowItemId) {
+                let k = i
+                let clickLevel = d[i].level
+                o['active' + d[i].parentid] = false
+                while (666) {
+                  k++
+                  if (d[k] == undefined) break
+                  if (d[k].level > clickLevel) {
+                    o['active' + d[k].id] = false
+                  } else {
+                    break
+                  }
+                }
+                repeatFn.call(this, d[i])
+                function repeatFn(item) {
+                  o['active' + item.parentid] = false
+                  if (item.parentid == item.id) {
+                    return
+                  }
+                  for (let i = 0; i < d.length; i++) {
+                    if (d[i].id == item.parentid) {
+                      repeatFn.call(this, d[i])
+                    }
+                  }
+                }
+                break
+              }
+            }
+          }
+          this.setState({
+            checkboxControl: {
+              ...this.state.checkboxControl,
+              ...o
+            }
+          })
+        },
+
+        // ************************************
+        updateLine: function(id, level) {
+          $.get('/api?id=' + id, res => {
+            var d = res.data || $.extend(true, [], res),
+              o = {}
+            for (var i = 0, len = d.length; i < len; i++) {
+              d[i].show = true
+              d[i].level = level * 1 + 1
+              d[i].parentid = id
+              o['active' + d[i].id] = old_bool
+            }
+            var data = $.extend(true, [], this.state.data)
+            var rowIndex = null
+            var old_bool = this.state.checkboxControl['active' + id]
+            for (var i = 0; i < data.length; i++) {
+              if (data[i].id == id) {
+                rowIndex = i
+                data[i].children = [true]
+                data[i].isleaf = 1
+                data[i]._icon_ = true
+              }
+            }
+            data.splice(rowIndex * 1 + 1, 0, ...d)
+            this.setState(
+              {
+                data: data,
+                checkboxControl: {
+                  ...this.state.checkboxControl,
+                  ...o
+                }
+              },
+              () => {
+                this.initValue()
+              }
+            )
+          })
+        },
+
+        //行的输入事件
+        inputEdit: function(rowItemId, colProp, e) {
+          let d = [...this.state.data]
+          let col = [...this.state.column]
+          for (let i = 0; i < d.length; i++) {
+            if (d[i].id == rowItemId) {
+              d[i].editing = true
+              break
+            }
+          }
+          this.setState({
+            lineValue: {
+              ...this.state.lineValue,
+              ['lineValue' + colProp + rowItemId]: e.target.value
+            }
+          })
+        },
+
+        //btn-确认
+        saveBtn: function(rowItemId) {
+          let d = [...this.state.data]
+          let col = [...this.state.column]
+          for (let i = 0; i < d.length; i++) {
+            if (d[i].id == rowItemId) {
+              if (d[i].editing == true) {
+                d[i].modify = true
+              }
+              d[i].openEdit = false
+              for (let j = 0; j < col.length; j++) {
+                if (col[j].edit == true || col[j].select == true) {
+                  d[i][col[j].prop] = this.state.lineValue['lineValue' + col[j].prop + rowItemId]
+                }
+              }
+              break
+            }
+          }
+          this.setState(
+            {
+              operateStatus: {
+                ...this.state.operateStatus,
+                ['status' + rowItemId]: false
+              }
+            },
+            () => {
+              console.log(this.state.lineValue)
+            }
+          )
+        },
+
+        //btn-撤销
+        cancel: function(rowItemId) {
+          let d = [...this.state.data]
+          let col = [...this.state.column]
+          let o = {}
+          for (let i = 0; i < d.length; i++) {
+            if (d[i].id == rowItemId) {
+              d[i].openEdit = false
+              for (let j = 0; j < col.length; j++) {
+                if (col[j].edit == true || col[j].select == true) {
+                  o['lineValue' + col[j].prop + rowItemId] = d[i][col[j].prop]
+                }
+              }
+              break
+            }
+          }
+          this.setState({
+            lineValue: {
+              ...this.state.lineValue,
+              ...o
+            },
+            operateStatus: {
+              ...this.state.operateStatus,
+              ['status' + rowItemId]: false
+            }
+          })
+        },
+
+        //btn-同下级的增加
+        addLine: function(rowItemId, indexed) {
+          if (indexed == 1) {
+            // 1、增加同级
+            let d = [...this.state.data]
+            let rowItem = null
+            for (let i = 0; i < d.length; i++) {
+              if (d[i].id == rowItemId) {
+                rowItem = d[i]
+              }
+            }
+            let [lastLine, nowData] = this.handleExpand(rowItem, false)
+            let newId = Date.now() + 'Empty'
+            //增加项
+            let addItem = {
+              ...JSON.parse(JSON.stringify(this.state.data_format)),
+              ...{
+                id: newId,
+                level: rowItem.level,
+                parentid: rowItem.parentid,
+                modify: true,
+                show: true,
+                isleaf: 1,
+                openEdit: true,
+                children: [] //长度为0，就没有+/-
+              }
+            }
+            nowData.splice(lastLine, 0, addItem)
+
+            this.setState({
+              data: nowData,
+              operateStatus: {
+                ...this.state.operateStatus,
+                ['status' + newId]: true
+              }
+            })
+          } else if (indexed == 2) {
+            // 2、增加下级
+            let d = [...this.state.data]
+            let rowItem = null
+            let rowIndex = null
+            for (let i = 0; i < d.length; i++) {
+              if (d[i].id == rowItemId) {
+                d[i].children = [true]
+                rowItem = d[i]
+                rowItem._icon_ = true
+                rowIndex = i
+              }
+            }
+            let newId = Date.now() + '__timestamp__;'
+            let [lastLine, nowData] = this.handleExpand(rowItem, true)
+            let addItem = {
+              ...JSON.parse(JSON.stringify(this.state.data_format)),
+              ...{
+                id: newId,
+                level: Number.parseInt(rowItem.level) + 1,
+                parentid: rowItem.id,
+
+                modify: true,
+                show: true,
+                isleaf: 1,
+                openEdit: true,
+
+                children: [] //长度为0，就没有+/-
+              }
+            }
+
+            nowData.splice(Number.parseInt(rowIndex) + 1, 0, addItem)
+            this.setState({
+              data: nowData,
+              operateStatus: {
+                ...this.state.operateStatus,
+                ['status' + newId]: true
+              }
+            })
           }
         },
 
         render: function() {
           var columns = this.props.columns
           var arr = this.state.data.filter(v => v.show)
+
           return (
             <div className="tree-wrap">
               <div className="tree">
-                <ul class="table-header">
+                <ul className="table-header">
                   {columns.map((col, i) => {
                     return (
                       <li
                         key={i}
                         className="nowrap"
                         style={{
-                          width: col.width
-                            ? col.width + 'px'
-                            : this.state.minWidth + 'px',
-                          flex: col.width
-                            ? 'none'
-                            : col.delete == true || col.operate == true
-                            ? 'none'
-                            : 1,
+                          width: col.width ? col.width + 'px' : this.state.minWidth + 'px',
+                          flex: col.width ? 'none' : col.delete == true || col.operate == true ? 'none' : 1,
                           overflow: col.operate == true ? 'visible' : '',
                           padding: '0px 10px'
                         }}
                       >
                         {col.operate ? (
-                          <i
-                            style={{ transform: 'translateX(-12px)' }}
-                            className="fa fa-cogs"
-                            aria-hidden="true"
-                          />
+                          <i style={{ transform: 'translateX(-12px)' }} className="fa fa-cogs" aria-hidden="true" />
                         ) : null}
-
                         {col.delete ? (
-                          <span
-                            style={{ transform: 'translateX(-12px)' }}
-                            className="fa fa-cogs"
-                            aria-hidden="true"
-                          >
+                          <span style={{ transform: 'translateX(-12px)' }} className="fa fa-cogs" aria-hidden="true">
                             <button
                               style={{
                                 display: this.props.showDeleteBtn ? '' : 'none'
@@ -238,21 +556,20 @@
                               disabled={this.state.deleteBtnDisable}
                             >
                               {this.state.deleteBtnDisable ? (
-                                <i
-                                  className="fa fa-spin fa-spinner"
-                                  aria-hidden="true"
-                                />
+                                <i className="fa fa-spin fa-spinner" aria-hidden="true" />
                               ) : (
                                 <i className="fa fa-trash" aria-hidden="true" />
                               )}
                             </button>
                           </span>
                         ) : null}
+                        {col.name}
                       </li>
                     )
                   })}
                 </ul>
 
+                {/**表体*/}
                 {columns.length ? (
                   <ul className="table-body">
                     {arr.map((d, i) => {
@@ -260,57 +577,39 @@
                         <div className="table-body-li-wrap" key={d.id}>
                           {this.state.loading[d.id] ? (
                             <div className="uploading">
-                              <i
-                                className="fa fa-spin fa-spinner"
-                                aria-hidden="true"
-                              />
+                              <i className="fa fa-spin fa-spinner" aria-hidden="true" />
                             </div>
                           ) : null}
 
-                          <div className="flex">
+                          <div style={{ display: 'flex' }}>
                             {columns.map((col, i) => {
                               return (
                                 <li
                                   className="table-body-li nowrap"
                                   key={i}
                                   style={{
-                                    width: col.width
-                                      ? col.width + 'px'
-                                      : this.state.minWidth + 'px',
-                                    flex: col.width
-                                      ? 'none'
-                                      : col.delete == true ||
-                                        col.operate == true
-                                      ? 'none'
-                                      : 1,
+                                    width: col.width ? col.width + 'px' : this.state.minWidth + 'px',
+                                    flex: col.width ? 'none' : col.delete == true || col.operate == true ? 'none' : 1,
                                     padding: '0px 10px',
-                                    paddingLeft: col.isTree
-                                      ? 10 + d.level * 30 + 'px'
-                                      : '10px',
-                                    overflow:
-                                      col.operate == true ? 'visible' : ''
+                                    paddingLeft: col.isTree ? 10 + d.level * 30 + 'px' : '10px',
+                                    overflow: col.operate == true ? 'visible' : ''
                                   }}
                                 >
                                   {col.isTree ? (
-                                    <div>
+                                    <span>
                                       {d.level != '0' ? (
                                         <span>
-                                          {new Array(d.level).map(
-                                            (line, indexLine) => {
-                                              return (
-                                                <i
-                                                  key={indexLine}
-                                                  style={{
-                                                    left:
-                                                      (line - 1) * 30 +
-                                                      16 +
-                                                      'px'
-                                                  }}
-                                                  className="v-line-full"
-                                                />
-                                              )
-                                            }
-                                          )}
+                                          {new Array(d.level).fill(1).map((line, indexLine) => {
+                                            return (
+                                              <i
+                                                key={indexLine}
+                                                style={{
+                                                  left: indexLine * 30 + 16 + 'px'
+                                                }}
+                                                className="v-line-full"
+                                              />
+                                            )
+                                          })}
                                         </span>
                                       ) : null}
 
@@ -331,53 +630,52 @@
                                           className="v-line-h"
                                         />
                                       ) : null}
-                                    </div>
+                                    </span>
                                   ) : null}
-
                                   {col.isTree && d.children.length != 0 ? (
-                                    <div>
-                                      {d._icon_ ? (
-                                        <span>
-                                          <i
-                                            className="fa fa-minus-square"
-                                            aria-hidden="true"
-                                          />
+                                    <span>
+                                      {d._icon_ == true ? (
+                                        <span onClick={this.handleExpand.bind(this, d, false)}>
+                                          <i className="fa fa-minus-square" aria-hidden="true" />
                                         </span>
                                       ) : (
-                                        <span>
-                                          <i
-                                            className="fa fa-plus-square"
-                                            aria-hidden="true"
-                                          />
+                                        <span onClick={this.handleExpand.bind(this, d, true)}>
+                                          <i className="fa fa-plus-square" aria-hidden="true" />
                                         </span>
                                       )}
-                                    </div>
+                                    </span>
                                   ) : null}
-
+                                  {col.delete ? (
+                                    <span
+                                      onClick={this.checkbox_change.bind(this, d.id)}
+                                      className={
+                                        'checkbox-span ' + (this.state.checkboxControl['active' + d.id] ? 'active' : '')
+                                      }
+                                    >
+                                      {this.state.checkboxControl['active' + d.id] ? (
+                                        <i className="fa fa-check-circle" aria-hidden="true" />
+                                      ) : (
+                                        <i className="fa fa-circle-o" aria-hidden="true" />
+                                      )}
+                                    </span>
+                                  ) : null}
+                                  {/** 需要动态增加子节点的加图标*/}
                                   {col.isTree && d.children.length == 0 ? (
-                                    <div>
-                                      <span>
-                                        {d.isleaf == 0 ? (
-                                          <i
-                                            className="fa fa-plus-square"
-                                            aria-hidden="true"
-                                          />
-                                        ) : (
-                                          <i
-                                            className="fa fa-file-text-o"
-                                            aria-hidden="true"
-                                          />
-                                        )}
-                                      </span>
-                                    </div>
+                                    <span>
+                                      {d.isleaf == 0 ? (
+                                        <i
+                                          className="fa fa-plus-square"
+                                          aria-hidden="true"
+                                          onClick={this.updateLine.bind(this, d.id, d.level)}
+                                        />
+                                      ) : (
+                                        <i className="fa fa-file-text-o" aria-hidden="true" />
+                                      )}
+                                    </span>
                                   ) : null}
-
                                   {col.select ? (
                                     <div>
-                                      <span
-                                        style={{ textAlign: 'left' }}
-                                        className="no-wrap"
-                                      >
+                                      <span style={{ textAlign: 'left' }} className="no-wrap">
                                         {d[col.prop]}
                                       </span>
                                       <select
@@ -387,16 +685,58 @@
                                       >
                                         {col.optionList.map((opt, index) => {
                                           return (
-                                            <option
-                                              value={opt}
-                                              key={opt + index}
-                                            >
+                                            <option value={opt} key={opt + index}>
                                               {opt}
                                             </option>
                                           )
                                         })}
                                       </select>
                                     </div>
+                                  ) : null}
+                                  {/**不可编辑*/}
+                                  {!col.edit &&
+                                  !col.operate &&
+                                  !col.delete &&
+                                  col.prop != 'id' &&
+                                  !col.select &&
+                                  !col.funcList ? (
+                                    <span>{d[col.prop]}</span>
+                                  ) : !col.edit &&
+                                    !col.operate &&
+                                    !col.delete &&
+                                    col.prop == 'id' &&
+                                    !col.select &&
+                                    !col.funcList ? (
+                                    <span>{d[col.prop]}</span>
+                                  ) : null}
+                                  {/**可编辑*/}
+                                  {col.edit ? (
+                                    !this.state.operateStatus['status' + d.id] ? (
+                                      <span style={{ textAlign: 'left' }} title={d[col.prop]} className="no-wrap">
+                                        {d[col.prop]}
+                                      </span>
+                                    ) : (
+                                      <input
+                                        type="text"
+                                        style={{ width: col.isTree ? 'auto' : '100%' }}
+                                        value={this.state.lineValue['lineValue' + col.prop + d.id] || ''}
+                                        onChange={this.inputEdit.bind(this, d.id, col.prop)}
+                                      />
+                                    )
+                                  ) : null}
+                                  {col.operate ? (
+                                    !this.state.operateStatus['status' + d.id] ? (
+                                      <span>
+                                        <button onClick={this.operateBtn.bind(this, d.id)}>编辑</button>
+                                        <button onClick={this.addLine.bind(this, d.id, 1)}>增加同级</button>
+                                        <button onClick={this.addLine.bind(this, d.id, 2)}>增加下级</button>
+                                      </span>
+                                    ) : (
+                                      <span>
+                                        <button onClick={this.saveBtn.bind(this, d.id)}>保存</button>
+                                        <button onClick={this.cancel.bind(this, d.id)}>取消</button>
+                                      </span>
+                                    )
                                   ) : null}
                                 </li>
                               )
@@ -412,6 +752,7 @@
                     &nbsp;&nbsp;数据为空
                   </div>
                 )}
+                {/**表体*/}
               </div>
 
               {this.props.treeLoading && this.state.data.length ? (
@@ -433,23 +774,15 @@
             columns: [
               { name: 'ID', prop: 'id', width: 50 },
               {
-                name: 'name字段',
+                name: '组织机构',
                 prop: 'name',
-                width: 260,
+                width: 200,
                 isTree: true,
-                edit: true,
-                delete: true
+                edit: true
               },
-              { name: '操作', operate: true, width: 50 },
-              { name: 'url', prop: 'url', edit: true, width: 50 },
-              {
-                name: '下拉的',
-                width: 50,
-                prop: 'selectItem',
-                select: true,
-                optionList: [1, 2, 3, 4]
-              },
-              { name: '功能选择', prop: 'funcList', funcList: true, width: 50 }
+              { name: '层级', prop: 'level', width: 120 },
+              { name: 'url', prop: 'url', edit: true },
+              { name: '操作', operate: true, width: 200 }
             ]
           }
         },
@@ -469,6 +802,10 @@
           })
         },
 
+        expand: function(...args) {
+          console.log(args[0])
+        },
+
         componentDidMount: function() {
           this.treeLoading = true
           this.getData()
@@ -478,16 +815,14 @@
           return (
             <div>
               <input type="text" ref="myTextInput" />
-              <input
-                type="button"
-                value="Focus the text input1"
-                onClick={this.handleClick}
-              />
+              <input type="button" value="Focus the text input1" onClick={this.handleClick} />
+
               <TableTree
                 columns={this.state.columns}
                 rowdata={this.state.data}
                 treeLoading={this.state.treeLoading}
                 needUpdate={this.state.needUpdate}
+                expand={this.expand}
               />
             </div>
           )
