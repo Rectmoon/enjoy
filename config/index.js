@@ -11,7 +11,8 @@ module.exports = {
     productionSourceMap: true,
     productionGzip: false,
     productionGzipExtensions: ['js', 'css'],
-    bundleAnalyzerReport: process.env.npm_config_report
+    bundleAnalyzerReport: process.env.npm_config_report,
+    devtool: '#source-map'
   },
   dev: {
     assetsVersionMode: 'hash',
@@ -23,6 +24,7 @@ module.exports = {
     assetsPublicPath: '/',
     proxyTable: {},
     cssSourceMap: false,
-    notifyOnErrors: true
+    notifyOnErrors: true,
+    devtool: 'cheap-module-eval-source-map'
   }
 }
