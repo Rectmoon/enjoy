@@ -13,3 +13,10 @@ border-bottom-1px($color)
     -webkit-transform-origin 0 0
     transform scaleY(0.5)
     -webkit-transform scaleY(0.5)
+
+triangle($px, $color)
+  width $px
+  height $px
+  border-color $color
+  border-style solid none none solid
+  transform rotateZ(225deg)
