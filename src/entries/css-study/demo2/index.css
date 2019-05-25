@@ -1,0 +1,30 @@
+.wrapper {
+  position: relative;
+}
+
+.content {
+  line-height: 36px;
+  text-indent: 2em;
+}
+
+.content.short-content {
+  max-height: 300px;
+  overflow: hidden;
+}
+
+.wrapper .show-more {
+  width: 100%;
+  text-align: center;
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  line-height: 48px;
+  background: #fff;
+  box-shadow: 0 -10px 120px 54px #fff;
+  border-bottom: 1px solid rgba(28, 31, 33, 0.1);
+}
+
+.wrapper .show-more span {
+  cursor: pointer;
+  color: cyan;
+}
