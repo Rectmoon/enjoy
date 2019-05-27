@@ -29,6 +29,42 @@ const webpackConfig = merge(baseWebpackConfig, {
     chunkFilename: utils.assetsPath('js/[id].[chunkhash:6].js', true)
   },
 
+  optimization: {
+    runtimeChunk: {
+      name: 'manifest'
+    },
+    splitChunks: {
+      cacheGroups: {
+        default: false,
+        common: {
+          test: /[\\/]src[\\/](common|components)[\\/]/,
+          minChunks: 2,
+          minSize: 2,
+          chunks: 'initial',
+          name: 'common',
+          priority: 10,
+          enforce: true,
+          reuseExistingChunk: true
+        },
+        styles: {
+          name: 'styles',
+          test: /(reset|common|base)\.(s?css|sass|styl|less)/,
+          chunks: 'initial',
+          enforce: true
+        }
+      }
+    }
+  },
+  stats: {
+    chunkGroups: false,
+    chunkModules: false,
+    chunkOrigins: false,
+    modules: false,
+    moduleTrace: false,
+    source: false,
+    children: false
+  },
+
   plugins: [
     new webpack.DefinePlugin({
       'process.env': env

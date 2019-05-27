@@ -1,0 +1,248 @@
+
+@import '~assets/styles/mixin.styl'
+
+.top-bar
+  img
+    height 1rem
+
+  form
+    width 40%
+    border 1px solid #5bd4c7
+    border-radius 2rem
+    padding 0 0.5rem
+
+    input
+      width 80%
+      border none
+      background none
+      line-height 1.5rem
+      color #aaa
+      font-size 0.9rem
+
+    .search-icon
+      display inline-block
+      width 1rem
+      height 1rem
+      background url('~assets/images/boss/sprites.png') no-repeat top center
+      background-size 100% auto
+
+.job-info
+  background #62d5c8
+  color #fff
+
+  .title
+    font-size 1.2rem
+
+  .props
+    font-size 0.8rem
+    margin 0.5rem 0
+
+    .items
+      i
+        display inline-block
+        width 1px
+        height 0.8rem
+        background #fff
+        margin 0.2rem 0.5rem
+
+  .tags
+    span
+      border 1px solid #fff
+      padding 0.2rem 0.5rem
+      border-radius 2rem
+      font-size 0.75rem
+
+.user-info
+  background #eefbf9
+
+  img
+    height 3.5rem
+    border-radius 50%
+
+  button
+    background-color #62d5c8
+    color #fff
+    flex-shrink 0
+
+  .info
+    width 40%
+    margin 0 1rem
+
+    .name
+      color #333
+      font-size 1rem
+
+      .like
+        font-size 0.8rem
+        color #fb7042
+        line-height 0.8rem
+
+        i
+          display inline-block
+          width 0.8rem
+          height 0.8rem
+          background url('~assets/images/boss/like.png') no-repeat
+          background-size 100% 100%
+          vertical-align baseline
+
+  .desc
+    font-size 0.8rem
+    color #aaa
+    margin-top 0.5rem
+
+.job-detail
+  h3
+    position relative
+    color #333
+    font-weight 700
+    font-size 1rem
+    line-height 44px
+
+    &:before
+      content ''
+      display block
+      width 1rem
+      height 2px
+      background #62d5c8
+      position absolute
+      left 0
+      bottom 0
+
+  .text
+    padding-top 1rem
+    font-size 0.95rem
+    line-height 1.6rem
+
+    table
+      border 1px solid #ebecef
+      padding 0.7rem 0.3rem
+      font-size 0.75rem
+
+      th
+        font-weight normal
+        width 6rem
+        color #9fa3b0
+
+      td
+        width 8rem
+        font-size 0.7rem
+
+  .tags
+    padding-top 0.7rem
+
+    span
+      font-size 0.9rem
+      color #5bd4c7
+      border 1px solid #5bd4c7
+      margin 0 0.5rem 0.5rem 0
+      padding 0.1rem 0.5rem
+      border-radius 1rem
+
+.company-info
+  background #eefbf9
+
+  img
+    height 3.5rem
+    border-radius 50%
+
+  .info
+    width 100%
+    margin-left 1rem
+
+    .name
+      color #333
+
+      button
+        background #62d5c8
+        color #fff
+
+    .desc
+      color #333
+      font-size 0.8rem
+
+    .tags
+      margin-top 0.5rem
+      font-size 0.75rem
+      justify-content flex-start
+
+      i
+        display inline-block
+        width 1px
+        height 0.8rem
+        background #eebecf
+        margin 0.2rem 0.5rem
+
+.related-jobs
+  h3
+    color #7e8793
+    font-weight normal
+    font-size 0.9rem
+
+  li
+    a
+      padding 1rem 0
+      color #7e8793
+      border-top-1px(#ccc)
+
+      img
+        height 3.5rem
+        border-radius 0.2rem
+
+      .text
+        width 100%
+        margin-left 1rem
+
+        button
+          border 1px solid #62d5c8
+          color #62d5c8
+          background none
+          margin-top 0.2rem
+          padding 0.4rem 1.2rem
+
+        h4
+          color #333
+          font-size 0.9rem
+
+          .salary
+            font-size 1.2rem
+            color #fc6c38
+
+        .company
+          color #333
+          font-size 0.8rem
+          margin 0.2rem 0
+
+        .props
+          font-size 0.8rem
+
+          span
+            margin-right 0.5rem
+
+.related-companies
+  h3
+    color #7e8793
+    font-weight normal
+    font-size 0.9rem
+
+  a
+    color #7e8793
+    font-size 0.8rem
+    margin 0 0.8rem 0.2rem 0
+
+.job-footer
+  border-top 1px solid #ebecef
+  margin 1rem
+  padding 1rem 0
+  line-height 1.5rem
+  font-size 0.75rem
+
+  a
+    color #7e8793
+    font-size 0.8rem
+    margin 0 0 0.2rem 0
+
+  i
+    display inline-block
+    triangle(8px, #ddd)
+    transform rotate(135deg)
+    margin 0 0.5rem
