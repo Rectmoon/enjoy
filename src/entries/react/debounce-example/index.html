@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="/static/react.js"></script>
+    <script src="/static/react-dom.js"></script>
+    <script src="/static/browser.min.js"></script>
+  </head>
+  <body>
+    <div id="example"></div>
+    <script type="text/babel">
+      const getNow = () => +new Date()
+      function debounce(callback, delay = 50, immediate = true) {
+        let timer, context, args
+        // 延迟执行函数
+        const later = () =>
+          setTimeout(() => {
+            // 延迟函数执行完毕，清空缓存的定时器序号
+            timer = null
+            // 延迟执行的情况下，函数会在延迟函数中执行
+            // 使用到之前缓存的参数和上下文
+            if (!immediate) {
+              callback.apply(context, args)
+              context = args = null
+            }
+          }, delay)
+
+        return function(...params) {
+          // 如果没有创建延迟执行函数（later），就创建一个
+          if (!timer) {
+            timer = later()
+            // 如果是立即执行，调用函数
+            // 否则缓存参数和调用上下文
+            if (immediate) {
+              callback.apply(this, params)
+            } else {
+              context = this
+              args = params
+            }
+          } else {
+            // 如果已有延迟执行函数（later），调用的时候清除原来的并重新设定一个
+            // 这样做延迟函数会重新计时
+            clearTimeout(timer)
+            timer = later()
+          }
+        }
+      }
+
+      var Example = React.createClass({
+        getInitialState: function() {
+          return {
+            value: 1
+          }
+        },
+
+        handleChange: debounce(function(e) {
+          var v = e.target.value
+          setTimeout(() => {
+            this.setState({ value: v })
+          }, 300)
+        }, 500),
+
+        render: function() {
+          return (
+            <main>
+              <h1>Most Popular JavaScript Projects in Github</h1>
+              <input value={this.state.value} onChange={this.handleChange} />
+            </main>
+          )
+        }
+      })
+
+      ReactDOM.render(<Example />, document.getElementById('example'))
+    </script>
+  </body>
+</html>
