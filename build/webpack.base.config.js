@@ -17,7 +17,9 @@ module.exports = {
     extensions: ['.js', '.json', '.css', '.html', '.styl'],
     alias: {
       '@': resolve('src'),
-      assets: resolve('src/assets')
+      assets: resolve('src/assets'),
+      react: resolve('static/react.js'),
+      'react-dom': resolve('static/react-dom.js')
     }
   },
   module: {
