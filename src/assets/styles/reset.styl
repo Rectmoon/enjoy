@@ -1,5 +1,4 @@
 *
-  box-sizing border-box
   -webkit-text-size-adjust 100%
   -webkit-tap-highlight-color transparent
   -webkit-font-smoothing antialiased
@@ -8,8 +7,11 @@
   outline none
 
 html, body
-  width 100%
   height 100%
+
+input, textarea, img, video, object
+  box-sizing border-box
+  -ms-box-sizing border-box
 
 .page
   width 100%
