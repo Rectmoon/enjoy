@@ -39,15 +39,15 @@ exports.cssLoaders = function(options) {
 
   function generateLoaders(loader, loaderOptions) {
     const loaders = ['style-loader', cssLoader]
-    if (loader) {
-      if (loader !== 'postcss') {
-        loaders.push({
-          loader: 'postcss-loader',
-          options: Object.assign({}, loaderOptions, {
-            sourceMap: options.sourceMap
-          })
+    if (loader !== 'postcss') {
+      loaders.push({
+        loader: 'postcss-loader',
+        options: Object.assign({}, loaderOptions, {
+          sourceMap: options.sourceMap
         })
-      }
+      })
+    }
+    if (loader) {
       loaders.push({
         loader: loader + '-loader',
         options: Object.assign({}, loaderOptions, {
@@ -82,6 +82,7 @@ exports.styleLoaders = function(options) {
       use: loader
     })
   }
+  console.log(JSON.stringify(output, null, 2))
   return output
 }
 

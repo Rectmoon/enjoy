@@ -1,3 +1,14 @@
+#mask {
+  position: fixed;
+  background: rgb(0, 0, 0, 0.6);
+  z-index: 300;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+}
+
 .wrapper {
   width: 300px;
   background-color: #f00;
@@ -23,6 +34,7 @@
 }
 
 .container {
+  width: 61.8%;
   display: inline-block;
   position: relative;
 }
@@ -43,4 +55,67 @@
 .container a.next {
   right: 0;
   background-color: #34538b;
+}
+
+.loading {
+  z-index: 301;
+  background-color: #fff;
+  border: 1px solid #f0f0f0;
+  position: fixed;
+  _position: absolute;
+  top: 144px;
+  right: 10px;
+  height: 95px;
+  width: 360px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.05);
+}
+
+.loading .ball {
+  width: 40px;
+  margin: 41px auto 0;
+  position: relative;
+}
+
+.loading .b {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.loading .b.b1 {
+  z-index: 100;
+  background-color: rgb(99, 99, 99);
+  animation: r1 1s infinite;
+}
+
+.loading .b.b2 {
+  left: 50%;
+  margin-left: -5px;
+  background-color: rgb(235, 67, 70);
+}
+
+.loading .b.b3 {
+  right: 0;
+  z-index: -100;
+  background-color: rgb(55, 137, 250);
+  animation: r3 1s infinite;
+}
+
+@keyframes r1 {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(30px);
+  }
+}
+
+@keyframes r3 {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-30px);
+  }
 }
