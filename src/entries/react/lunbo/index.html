@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="/static/react.js"></script>
+    <script src="/static/react-dom.js"></script>
+    <script src="/static/browser.min.js"></script>
+  </head>
+  <body>
+    <div id="app"></div>
+    <div id="example"></div>
+    <script type="text/babel">
+      var Example = React.createClass({
+        getInitialState: function() {
+          return {
+            value: 1
+          }
+        },
+
+        handleChange: function(e) {
+          this.setState({ value: e.target.value })
+        },
+
+        render: function() {
+          return (
+            <main>
+              <h1>Most Popular JavaScript Projects in Github</h1>
+              <input value={this.state.value} onChange={this.handleChange} />
+            </main>
+          )
+        }
+      })
+
+      ReactDOM.render(<Example />, document.getElementById('example'))
+    </script>
+  </body>
+</html>

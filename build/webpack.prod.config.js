@@ -25,9 +25,14 @@ const webpackConfig = merge(baseWebpackConfig, {
 
   output: {
     path: config.build.assetsRoot,
-    filename: utils.assetsPath('js/[name].[chunkhash:6].js', true),
-    chunkFilename: utils.assetsPath('js/[id].[chunkhash:6].js', true)
+    filename: utils.assetsPath('js/[name].[chunkhash:6].js', true)
+    // chunkFilename: utils.assetsPath('js/[id].[chunkhash:6].js', true)
   },
+
+  // externals: {
+  //   react: 'React',
+  //   'react-dom': 'ReactDOM'
+  // },
 
   optimization: {
     runtimeChunk: {

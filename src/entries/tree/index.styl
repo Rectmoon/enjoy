@@ -1,0 +1,27 @@
+
+*
+  margin 0
+  padding 0
+
+ul
+  position relative
+  width 200px
+  height 500px
+
+  li
+    list-style none
+    border 1px solid #ccc
+
+    &:hover
+      > ul
+        display block
+
+    a
+      text-decoration none
+      color orange
+
+    > ul
+      display none
+      position absolute
+      left 100%
+      top 0

@@ -1,5 +1,5 @@
-import React from 'react'
-import ReactDOM from 'react-dom'
+// import React from 'react'
+// import ReactDOM from 'react-dom'
 
 function debounce(func, wait = 500) {
   let timeout // 定时器变量
