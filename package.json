@@ -1,7 +1,8 @@
 {
-  "name": "41",
+  "name": "enjoy",
   "version": "1.0.0",
   "description": "static page",
+  "repository": "https://github.com/Rectmoon/enjoy.git",
   "main": "index.js",
   "scripts": {
     "dev": "cross-env NODE_ENV=development webpack-dev-server --progress --config build/webpack.dev.config.js",
