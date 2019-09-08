@@ -25,8 +25,8 @@ const webpackConfig = merge(baseWebpackConfig, {
 
   output: {
     path: config.build.assetsRoot,
-    filename: utils.assetsPath('js/[name].[chunkhash:6].js', true)
-    // chunkFilename: utils.assetsPath('js/[id].[chunkhash:6].js', true)
+    filename: utils.assetsPath('js/[name].[chunkhash:6].js', true),
+    chunkFilename: utils.assetsPath('js/[id].[chunkhash:6].js', true)
   },
 
   // externals: {
@@ -35,12 +35,21 @@ const webpackConfig = merge(baseWebpackConfig, {
   // },
 
   optimization: {
+    moduleIds: 'hashed',
     runtimeChunk: {
       name: 'manifest'
     },
     splitChunks: {
       cacheGroups: {
         default: false,
+        vendors: false,
+        polyfill: {
+          test: /[\\/]node_modules[\\/](core-js|raf|@babel|babel)[\\/]/,
+          name: 'polyfill',
+          priority: 30,
+          chunks: 'all',
+          reuseExistingChunk: true
+        },
         common: {
           test: /[\\/]src[\\/](common|components)[\\/]/,
           minChunks: 2,

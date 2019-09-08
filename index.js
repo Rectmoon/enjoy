@@ -5,5 +5,5 @@ const app = express()
 app.use(express.static(path.join(__dirname, 'dist')))
 
 app.listen(3000, () => {
-  console.log(`listening at port 3000`)
+  console.log(`listening at http://localhost:3000`)
 })

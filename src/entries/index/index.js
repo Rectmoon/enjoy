@@ -1,7 +1,5 @@
 if (process.env.NODE_ENV == 'development') require('raw-loader!./index.html')
 
-require('es6-promise').polyfill()
-
 import '@/assets/styles/index.styl'
 import '@/assets/styles/layout.styl'
 

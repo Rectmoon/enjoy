@@ -8,11 +8,11 @@ module.exports = {
     assetsRoot: path.resolve(__dirname, '../dist'),
     assetsSubDirectory: 'static',
     assetsPublicPath: '/',
-    productionSourceMap: true,
+    productionSourceMap: false,
     productionGzip: false,
     productionGzipExtensions: ['js', 'css'],
     bundleAnalyzerReport: process.env.npm_config_report,
-    devtool: '#source-map'
+    devtool: 'source-map'
   },
   dev: {
     assetsVersionMode: 'hash',

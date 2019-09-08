@@ -110,7 +110,7 @@ exports.getEntries = function() {
 
 exports.getHtmlPlugins = function() {
   return exports.getPages().map(p => {
-    const chunks = isProd ? ['styles', 'common', 'manifest', 'vendor', p[0]] : [p[0]]
+    const chunks = isProd ? ['manifest', 'polyfill', 'styles', 'common', p[0]] : [p[0]]
     const tpName = p[1].replace('.js', '.html')
     const template = fs.existsSync(tpName) ? tpName : defaultTemplatePath
 
